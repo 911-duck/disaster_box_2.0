@@ -60,7 +60,7 @@ int pdata[9];
 // Определяем callback функцию обработки пакета
 void parsePacket(AsyncUDPPacket packet) {
   // Записываем адрес начала данных в памяти
-  int* data = (int*)packet.data();
+  int *data = (int *)packet.data();
   // Вычисляем размер данных
   const size_t len = packet.length() / sizeof(&data);
   // Если адрес данных не равен нулю и размер данных больше нуля...
@@ -99,7 +99,7 @@ void readSensorVibr(NetworkClient clvibr) {  // чтение датчика ви
 }
 
 void readSensorPrs(NetworkClient clprs) {  // чтение датчика давления
-  result_prs = String(pdata[3]);
+  result_prs = String(pdata[4]);
   result_prs += " mbar";
 
   clprs.println(result_prs);
@@ -320,6 +320,7 @@ void web_site_main() {
               client.println("  request.send(null);");
               client.println("}");
               client.println("</script>");
+              client.println("</script>");
               client.println("    <style>");
               client.println("        :root{");
               client.println("            --textColor: #000000;");
@@ -350,7 +351,7 @@ void web_site_main() {
               client.println("            .settings{");
               client.println("                height: 50px;");
               client.println("            }");
-              client.println("            .settings > a{");
+              client.println("            .settings{");
               client.println("                font-size: 20px;");
               client.println("            }");
               client.println("            .menu > .showing span{");
@@ -361,9 +362,6 @@ void web_site_main() {
               client.println("            }");
               client.println("        }");
               client.println("        @media screen and (min-width: 320px){");
-              client.println("            body .showingimgs li {");
-              client.println("                border-right: 2px solid gray;");
-              client.println("            }");
               client.println("            body .showing span{");
               client.println("                font-size: 100%;");
               client.println("            }");
@@ -374,18 +372,6 @@ void web_site_main() {
               client.println("            .showingimgs li > .img > img{");
               client.println("                height: 25%;");
               client.println("                width: 50%;");
-              client.println("            }");
-              client.println("            .showingimgs li > span{");
-              client.println("                width: 100%;");
-              client.println("                display: flex;");
-              client.println("                flex-wrap: wrap;");
-              client.println("                height: 12%;");
-              client.println("            }");
-              client.println("            body .showingimgs li:nth-child(1) > span > span{");
-              client.println("                text-align: center;");
-              client.println("                height: 50%;");
-              client.println("                overflow-wrap: anywhere;");
-              client.println("                white-space: normal;");
               client.println("            }");
               client.println("            body .value{");
               client.println("                display: flex;");
@@ -400,6 +386,7 @@ void web_site_main() {
               client.println("                width: 100px;");
               client.println("            }");
               client.println("            .menu > .showing button{");
+              client.println("                height: 45px;");
               client.println("                width: 40px;");
               client.println("                overflow: hidden;");
               client.println("            }");
@@ -431,12 +418,6 @@ void web_site_main() {
               client.println("            }");
               client.println("        }");
               client.println("        @media screen and (max-width:425px) {");
-              client.println("            body .up{");
-              client.println("                border-bottom: 2px solid gray;");
-              client.println("            }");
-              client.println("            body .showingimgs > ul > li{");
-              client.println("                border-right: 2px solid gray;");
-              client.println("            }");
               client.println("            body > .rightMain{");
               client.println("                padding: 0;");
               client.println("            }");
@@ -470,70 +451,76 @@ void web_site_main() {
               client.println("                height: 50%;");
               client.println("            }");
               client.println("        }");
-              client.println("        .showingimgs > ul > li > .titttle{");
-              client.println("            overflow-wrap: anywhere;");
-              client.println("            white-space: normal;");
-              client.println("            text-align: center;");
-              client.println("        }");
+              client.println("        ");
               client.println("        .leftMain{");
-              client.println("            padding: 10px;");
+              client.println("            padding: 40px;");
+              client.println("            margin-top: 40px;");
+              client.println("            margin-bottom: 20px;");
+              client.println("            margin-left: 40px;");
               client.println("            display: flex;");
               client.println("            flex-direction: column;");
               client.println("            width: 30%;");
-              client.println("            height: 100%;");
-              client.println("            border-right: 2px solid gray;");
+              client.println("            height: calc(100% - 80px);");
+              client.println("            background-color: #e5e2e2;");
+              client.println("            border-radius: 20px;");
               client.println("        }");
               client.println("        .rightMain{");
               client.println("            width: 70%;");
               client.println("            height: 100%;");
-              client.println("            padding: 10px;");
+              client.println("            padding: 20px;");
               client.println("        }");
               client.println("            .logo { margin-bottom: 10px; }");
-              client.println("            .date { margin-bottom: 50px; }");
+              client.println("            .date { margin-bottom: 10px; }");
+              client.println("            .vibor { margin-bottom: 40px; }");
+              client.println("            .titttle { text-align: center;}");
               client.println("            .showing { height: 75%; display: flex; flex-direction: column; justify-content: space-between; flex-wrap: nowrap; }");
-              client.println("            .showingimgs > ul > li > .titttle { text-align: center; }");
               client.println("            .showing > li { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid gray; }");
               client.println("            .showing span { font-size: 100%; }");
               client.println("            .showing .pokasanie { text-align: center; }");
-              client.println("            .settings { width: 50%; position: static; }");
+              client.println("            .settings { width: 50%; position: static; color: rgb(142, 142, 255); border-radius: 10px;}");
               client.println("            .showing { margin-bottom: 30px; }");
-              client.println("            .showingimgs { width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-evenly; border: 1px solid gray; }");
-              client.println("            .up, .bottom { width: 100%; height: 49%; display: flex; justify-content: space-evenly; }");
-              client.println("            .up { border-bottom: 5px solid gray; }");
-              client.println("            .showingimgs li { height: 100%; width: 30%; padding:5%;display: flex; flex-direction: column; justify-content: space-between; align-items: center; border-right: 5px solid gray; }");
-              client.println("            .showingimgs > .up > li:nth-child(3), .showingimgs > .bottom > li:nth-child(3) { border-right: none; }");
+              client.println("            .showingimgs { width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-evenly; }");
+              client.println("            .up, .bottom { width: 100%; height: 49%; display: flex; justify-content: space-evenly; padding-bottom: 10px; padding-top: 10px;}");
+              client.println("            .up { padding-top: 15px;}");
+              client.println("            .bottom { padding-bottom: 15px;}");
+              client.println("            .showingimgs li { height: 100%; width: 30%; padding:2%;display: flex; flex-direction: column; justify-content: space-between; align-items: center; background-color: #e5e2e2;  box-sizing: border-box; border-radius: 20px;}");
               client.println("            .showingimgs .img { width: 100%; height: 75%; display: flex; flex-direction: column; justify-content: space-evenly; align-items: center; }");
               client.println("            .img > img { width: 10%; height: 70%; }");
               client.println(".img>p {font-size: 100px;}");
               client.println("            .values { width: 100%; height: 25%; }");
+              client.println("            .selectDB { color: rgb(142, 142, 255); }");
               client.println("            .showingimgs > .bottom > li:nth-child(1) > .img { height: 66%; }");
               client.println("            .value { text-align: center; width: 100%; height: 50%; }");
-              client.println("            .have { text-align: center; width: 100%; height: 50%; background: var(--havent); border: 2px solid black; }");
+              client.println("            .have { text-align: center; width: 100%; height: 50%; background: var(--havent);}");
               client.println("            body .value_tem { border: 2px solid black; border-bottom: none; }");
               client.println("            body .value_hum { border: 2px solid black; }");
               client.println("            body .have_flame { height: 50%; }");
               client.println("            body .have_rain, .have_wibro, .have_wind { border-bottom: none; }");
               client.println("            body .value_rain,.value_gass,.value_flame,.have_gas, .value_wibro, .value_wind { border: 2px solid black; }");
               client.println("            body .have_gas { height: 50%; border-bottom: none;}");
-              client.println("            .menu { display: none; position: absolute; z-index: 52; height: 90%; width: 90%; top: 5%; left: 5%; border: 2px solid black; background: white; }");
+              client.println("            .menu { display: none; position: absolute; z-index: 52; height: auto; width: 90%; top: 50%; left: 50%;  transform: translateX(-50%) translateY(-50%); background: white;border-radius: 10px; box-shadow: 0 0 5px 1px black;}");
               client.println("            .bloored { filter: blur(100%); }");
-              client.println("            .back { width: 15%; height: 5%; }");
+              client.println("            .back { width: 140px; height: 40px; font-size: 20px; color: rgb(142, 142, 255); margin-left: 30px; margin-top: 10px;}");
               client.println("            .on, .off { width: 100px; height: 100%; }");
               client.println("            .tittle { width: 150px; }");
+              client.println("            .SHOW{padding: 30px; height:87%; margin-bottom: 0; gap: 5px;}");
+              client.println("            .SHOW>li{border-bottom: none; background-color: #e5e2e2; padding: 10px;}");
+              client.println("            .hj {width: 260px;}");
+              client.println("            button{ border-radius: 5px;}");
               client.println("        </style>");
               client.println("    </head>");
               client.println("    <body>");
               client.println("        <div class='menu'>");
               client.println("            <button class='back'><a href='#'>Назад</a></button>");
-              client.println("            <ul class='showing'>");
-              client.println("                <li><span class='tittle'>Датчик осадков</span> <span class='pokasanie firstt'>Выкл</span> <button class='on'>Включить</button> <button class='off'>Выключить</button></li>");       // done
-              client.println("                <li><span class='tittle'>Датчик освещёности</span> <span class='pokasanie ninthh'>Выкл</span> <button class='on'>Включить</button> <button class='off'>Выключить</button></li>");   // done
-              client.println("                <li><span class='tittle'>Датчик газа</span> <span class='pokasanie fourthh'>Выкл</span><button class='on'>Включить</button> <button class='off'>Выключить</button></li>");          //done
-              client.println("                <li><span class='tittle'>Датчик влажности</span> <span class='pokasanie fifthh'>Выкл</span><button class='on'>Включить</button> <button class='off'>Выключить</button></li>");      //done
-              client.println("                <li><span class='tittle'>Датчик температуры</span> <span class='pokasanie secondd'>Выкл</span><button class='on'>Включить</button> <button class='off'>Выключить</button></li>");   //done
-              client.println("                <li><span class='tittle'>Датчик вибрации</span> <span class='pokasanie sixthh'>Выкл</span><button class='on'>Включить</button> <button class='off'>Выключить</button></li>");       //done
-              client.println("                <li><span class='tittle'>Датчик огня</span> <span class='pokasanie seventhh'>Выкл</span><button class='on'>Включить</button> <button class='off'>Выключить</button></li>");         //done
-              client.println("                <li><span class='tittle'>Датчик давления</span> <span class='pokasanie eighteenthh'>Выкл</span><button class='on'>Включить</button> <button class='off'>Выключить</button></li>");  //error
+              client.println("            <ul class='showing SHOW'>");
+              client.println("                <li><span class='tittle hj'>Датчик осадков</span> <span class='pokasanie firstt'>Выкл</span> <button class='on'>Включить</button> <button class='off'>Выключить</button></li>");       // done
+              client.println("                <li><span class='tittle hj'>Датчик освещёности</span> <span class='pokasanie ninthh'>Выкл</span> <button class='on'>Включить</button> <button class='off'>Выключить</button></li>");   // done
+              client.println("                <li><span class='tittle hj'>Датчик газа</span> <span class='pokasanie fourthh'>Выкл</span><button class='on'>Включить</button> <button class='off'>Выключить</button></li>");          //done
+              client.println("                <li><span class='tittle hj'>Датчик влажности</span> <span class='pokasanie fifthh'>Выкл</span><button class='on'>Включить</button> <button class='off'>Выключить</button></li>");      //done
+              client.println("                <li><span class='tittle hj'>Датчик температуры</span> <span class='pokasanie secondd'>Выкл</span><button class='on'>Включить</button> <button class='off'>Выключить</button></li>");   //done
+              client.println("                <li><span class='tittle hj'>Датчик вибрации</span> <span class='pokasanie sixthh'>Выкл</span><button class='on'>Включить</button> <button class='off'>Выключить</button></li>");       //done
+              client.println("                <li><span class='tittle hj'>Датчик огня</span> <span class='pokasanie seventhh'>Выкл</span><button class='on'>Включить</button> <button class='off'>Выключить</button></li>");         //done
+              client.println("                <li><span class='tittle hj'>Датчик давления</span> <span class='pokasanie eighteenthh'>Выкл</span><button class='on'>Включить</button> <button class='off'>Выключить</button></li>");  //error
               client.println("        </ul>");
               client.println("    </div>");
               client.println("    <div class='leftMain bloored'>");
@@ -749,26 +736,6 @@ void web_site_main() {
               client.println("                    menu.style.display = 'none'");
               client.println("                })");
               client.println("            })");
-              //              client.println(" window.addEventListener('keydown', e => {");
-              //              client.println("   if (e.ctrlKey && e.code == 'O'){");
-              //              client.println("   menu.style.display = 'block';");
-              //              client.println("                 menu.querySelectorAll('.on').forEach(el => {");
-              //              client.println("                     el.addEventListener('click', () => {");
-              //              client.println("                         el.parentNode.querySelector('.pokasanie').innerHTML = 'Вкл';");
-              //              client.println("                     })");
-              //              client.println("                 }) ");
-              //              client.println("       menu.querySelectorAll('.off').forEach(el => {");
-              //              client.println("        el.addEventListener('click', () => {");
-              //              client.println("               el.parentNode.querySelector('.pokasanie').innerHTML = 'Выкл';");
-              //              client.println("        })");
-              //              client.println("    })");
-              //              client.println("   document.querySelector('.back').addEventListener('click', () => {");
-              //              client.println("        menu.style.display = 'none';");
-              //              client.println("    })");
-              //              client.println("   }");
-              //              client.println("   if (e.ctrlKey && e.code == 'T'){");
-              //              client.println("     document.querySelector('.pokasanie').forEach(el => el.innerHTML = 'Вкл')");
-              //              client.println(" }}");
               client.println("if (window.innerWidth == 768) {document.querySelector('.needfix').innerHTML = 'Температур. и влажность'}");
               client.println("if (window.innerWidth <= 425) {");
               client.println("document.querySelectorAll('.on').forEach(el => el.innerHTML = 'Вкл');");
