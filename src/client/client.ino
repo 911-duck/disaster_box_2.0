@@ -87,7 +87,7 @@ void begin() {
   pinMode(pin_LED, OUTPUT);  //настройка пинов
 
   digitalWrite(pin_LED, HIGH);
-
+  bmp280.begin(0x76);
   dht.begin();  //вкл. библеотек
 }
 
