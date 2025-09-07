@@ -51,14 +51,17 @@ NetworkServer server(80);
 
 // Создаём объект UDP соединения
 AsyncUDP udp;
+AsyncUDP udps;
 
 // Определяем порт
-const uint16_t PORT = 49152;
+uint16_t PORT[10] = { 49152, 49153, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-int pdata[9];
+uint8_t port = 0;
+
+int pdata[10][9];
 
 // Определяем callback функцию обработки пакета
-void parsePacket(AsyncUDPPacket packet) {
+void parsePacketFirst(AsyncUDPPacket packet) {
   // Записываем адрес начала данных в памяти
   int *data = (int *)packet.data();
   // Вычисляем размер данных
@@ -69,7 +72,25 @@ void parsePacket(AsyncUDPPacket packet) {
     for (size_t i = 0; i < len; i++) {
       // Выводим каждый элемент в последовательный порт
       Serial.print(data[i]);
-      pdata[i] = data[i];
+      pdata[0][i] = data[i];
+      Serial.print(", ");
+    }
+    Serial.println();
+  }
+}
+
+void parsePacketSecond(AsyncUDPPacket packet) {
+  // Записываем адрес начала данных в памяти
+  int *data = (int *)packet.data();
+  // Вычисляем размер данных
+  const size_t len = packet.length() / sizeof(&data);
+  // Если адрес данных не равен нулю и размер данных больше нуля...
+  if (data != NULL && len > 0) {
+    // Проходим по элементам массива
+    for (size_t i = 0; i < len; i++) {
+      // Выводим каждый элемент в последовательный порт
+      Serial.print(data[i]);
+      pdata[1][i] = data[i];
       Serial.print(", ");
     }
     Serial.println();
@@ -79,18 +100,21 @@ void parsePacket(AsyncUDPPacket packet) {
 ///****************функции чтения****************////
 
 void readSensorFlame(NetworkClient clflame) {  // чтение датчика огня
-  if (pdata[0] == norm_val_flame) result_flame = "есть";
+  if (pdata[port][0] == norm_val_flame) result_flame = "есть";
   else result_flame = "нет";
   clflame.println(result_flame);
 }
 
 void readSensorWater(NetworkClient clwater) {  // чтение датчика воды
-  clwater.print(pdata[1]);
-  clwater.println(" mm");
+  if (port == 0) {
+    clwater.print(pdata[port][1]);
+    clwater.println(" mm");
+  }
+  if (port == 1) clwater.println("no data");
 }
 
 void readSensorVibr(NetworkClient clvibr) {  // чтение датчика вибрации
-  if (pdata[2] != norm_val_vibr) {
+  if (pdata[port][2] != norm_val_vibr) {
     result_vibr = "есть";
   } else {
     result_vibr = "нет";
@@ -99,28 +123,29 @@ void readSensorVibr(NetworkClient clvibr) {  // чтение датчика ви
 }
 
 void readSensorPrs(NetworkClient clprs) {  // чтение датчика давления
-  result_prs = String(pdata[4]);
+  result_prs = String(pdata[port][4]);
   result_prs += " mbar";
 
-  clprs.println(result_prs);
+  if (port == 0) clprs.println(result_prs);
+  if (port == 1) clprs.println("no data");
 }
 
 void readSensorDHTtem(NetworkClient clDHT) {  // чтение датчика DHT
-  result_dht_tem = String(pdata[5]);
+  result_dht_tem = String(pdata[port][5]);
   result_dht_tem += " °C";
 
   clDHT.println(result_dht_tem);
 }
 
 void readSensorDHThum(NetworkClient clDHT) {  // чтение датчика DHT
-  result_dht_hum = String(pdata[6]);
+  result_dht_hum = String(pdata[port][6]);
   result_dht_hum += " %";
 
   clDHT.println(result_dht_hum);
 }
 void readSensorMQ2(NetworkClient clMQ2) {  // чтение датчика MQ2
-  if (pdata[7] == norm_val_gass_co2) result_gass = "норма";
-  else if (pdata[7] != norm_val_gass_co2) result_gass = "повышенный";
+  if (pdata[port][7] == norm_val_gass_co2) result_gass = "норма";
+  else if (pdata[port][7] != norm_val_gass_co2) result_gass = "повышенный";
 
   clMQ2.println(result_gass);
 }
@@ -129,7 +154,8 @@ void readSensorLight(NetworkClient clLight) {  // чтение датчика о
   if (pdata[8] == 0) result_light = "день";
   else result_light = "ночь";
 
-  clLight.println(result_light);
+  if (port == 0) clLight.println(result_light);
+  if (port == 1) clLight.println("no data");
 }
 
 void setup() {
@@ -146,10 +172,15 @@ void setup() {
   Serial.println(myIP);
   server.begin();
 
-  if (udp.listen(PORT)) {
+  if (udp.listen(PORT[0])) {
 
     // При получении пакета вызываем callback функцию
-    udp.onPacket(parsePacket);
+    udp.onPacket(parsePacketFirst);
+  }
+  if (udps.listen(PORT[1])) {
+
+    // При получении пакета вызываем callback функцию
+    udps.onPacket(parsePacketSecond);
   }
   Serial.println("Server started");
 }
@@ -204,6 +235,12 @@ void web_site_main() {
             }  // новая функция для отправки данных датчика
             else if (HTTP_req.indexOf("ajax_MQ2") > -1) {
               readSensorMQ2(client);
+            }  // новая функция для отправки данных датчика
+            else if (HTTP_req.indexOf("ajax_D1") > -1) {
+              port = 0;
+            }  // новая функция для отправки данных датчика
+            else if (HTTP_req.indexOf("ajax_D2") > -1) {
+              port = 1;
             }  // новая функция для отправки данных датчика
             else {
               client.println();
@@ -317,6 +354,28 @@ void web_site_main() {
               client.println("document.getElementById(\"switch_MQ2_2\")\.innerHTML = this.responseText;");
               client.println("}}}}");
               client.println("  request.open(\"GET\", \"ajax_MQ2\" + nocache, true);");
+              client.println("  request.send(null);");
+              client.println("}");
+              client.println("function readSensorD1() {");
+              client.println("  nocache = \"&nocache=\"\+ Math.random() * 1000000;");
+              client.println("  var request = new XMLHttpRequest();");
+              client.println("  request.onreadystatechange = function() {");
+              client.println("if (this.readyState == 4) {");
+              client.println("if (this.status == 200) {");
+              client.println("if (this.responseText != null) {");
+              client.println("}}}}");
+              client.println("  request.open(\"GET\", \"ajax_D1\" + nocache, true);");
+              client.println("  request.send(null);");
+              client.println("}");
+              client.println("function readSensorD2() {");
+              client.println("  nocache = \"&nocache=\"\+ Math.random() * 1000000;");
+              client.println("  var request = new XMLHttpRequest();");
+              client.println("  request.onreadystatechange = function() {");
+              client.println("if (this.readyState == 4) {");
+              client.println("if (this.status == 200) {");
+              client.println("if (this.responseText != null) {");
+              client.println("}}}}");
+              client.println("  request.open(\"GET\", \"ajax_D2\" + nocache, true);");
               client.println("  request.send(null);");
               client.println("}");
               client.println("</script>");
@@ -471,6 +530,7 @@ void web_site_main() {
               client.println("        }");
               client.println("            .logo { margin-bottom: 10px; }");
               client.println("            .date { margin-bottom: 10px; }");
+              client.println("            .device { margin-bottom: 20px; }");
               client.println("            .vibor { margin-bottom: 40px; }");
               client.println("            .titttle { text-align: center;}");
               client.println("            .showing { height: 75%; display: flex; flex-direction: column; justify-content: space-between; flex-wrap: nowrap; }");
@@ -528,6 +588,7 @@ void web_site_main() {
               client.println("            <span class='title'>DisasterBOX</span>");
               client.println("        </div>");
               client.println("        <span class='date'></span>");
+              client.println("        <span class='device'>устройвства: <span class='DB selectDB'>disasterBOX</span>, <span class='DBM'>disterBOX-mini</span></span>");
               client.println("        <ul class='showing'>");
               client.println("            <li><span class='tittle'>Осадки</span > <span class='pokasanie first' >");  //done
               client.println(
@@ -660,6 +721,7 @@ void web_site_main() {
               client.println("            setInterval(() => {");
               client.println("                date.innerHTML = `${(new Date).getDay()}.${(new Date).getMonth()}.${(new Date).getFullYear()} ${(new Date).getHours()}:${(new Date).getMinutes()}:${(new Date).getSeconds()}`");
               client.println("            },1000)");
+              client.println("let flagTrevoga = 1");
               client.println("            let have_tem = document.querySelector('.value_tem')");       //clear
               client.println("            let have_rain = document.querySelector('.have_rain')");      //clear
               client.println("            let value_rain = document.querySelector('.value_rain')");    //clear
@@ -681,24 +743,72 @@ void web_site_main() {
               client.println("            let fifthv = document.querySelector('.fifth')");
               client.println("            let sixthv = document.querySelector('.sixth')");
               client.println("            let seventhv = document.querySelector('.seventh')");
-              client.println("if (+firstv.innerHTML.slice(0, firstv.innerHTML.length - 2) > 20){have_rain.style.background = 'var(--have)';have_rain.innerHTML = 'ОПАСНОСТЬ';}");
-              client.println("if (+secondv.innerHTML.slice(0, secondv.innerHTML.length - 4) > 2){have_wibro.style.background = 'var(--have)';have_wibro.innerHTML = 'ОПАСНОСТЬ';}");
-              client.println("if (+thirdv.innerText.slice(0, thirdv.innerText.length - 3) > 150 || +thirdv.innerText.slice(0, thirdv.innerText.length - 3) < 50){have_wind.style.background = 'var(--have)';have_wind.innerHTML = 'ОПАСНОСТЬ';}");
+              client.println("            document.querySelector('.DB').addEventListener('click',e=>{");
+              client.println("            document.querySelector('.DB').classList.add('selectDB')");
+              client.println("            document.querySelector('.DBM').classList.remove('selectDB');readSensorD1();readSensorLight();readSensorFlame();readSensorMQ2();readSensorVibr();readSensorWater();readSensorDHTtem();readSensorDHThum();readSensorPrs();checkValue();");
+              client.println("            })");
+              client.println("            document.querySelector('.DBM').addEventListener('click',e=>{");
+              client.println("            document.querySelector('.DBM').classList.add('selectDB')");
+              client.println("            document.querySelector('.DB').classList.remove('selectDB');readSensorD2();readSensorLight();readSensorFlame();readSensorMQ2();readSensorVibr();readSensorWater();readSensorDHTtem();readSensorDHThum();readSensorPrs();checkValue();");
+              client.println("            })");
+              client.println("function checkValue() {");
+              client.println("    if (Number(document.querySelector('#switch_water_2').innerText.slice(0, 2)) >= 30) {");
+              client.println("        if(flagTrevoga == 1){alert('тревога: сильный дождь!');");
+              client.println("        flagTrevoga = 0");
+              client.println("    setTimeout(() => {");
+              client.println("        flagTrevoga = 1");
+              client.println("    }, 60000);");
+              client.println("        document.querySelector('.have_rain').style.background = 'red'");
+              client.println("    }} else {");
+              client.println("        document.querySelector('.have_rain').style.background = '#008000'");
+              client.println("    }");
+              client.println("    if (document.querySelector('#switch_vibr_2').innerText == 'есть') {");
+              client.println("        if(flagTrevoga == 1){alert('тревога: землетрясение!');");
+              client.println("        flagTrevoga = 0");
+              client.println("    setTimeout(() => {");
+              client.println("        flagTrevoga = 1");
+              client.println("    }, 60000);");
+              client.println("        document.querySelector('.have_wibro').style.background = 'red'");
+              client.println("    }} else {");
+              client.println("        document.querySelector('.have_wibro').style.background = '#008000'");
+              client.println("    }");
+              client.println("    if (document.querySelector('#switch_flame_2').innerText == 'есть') {");
+              client.println("        if(flagTrevoga == 1){alert('тревога: возгорание!');");
+              client.println("        flagTrevoga = 0");
+              client.println("    setTimeout(() => {");
+              client.println("        flagTrevoga = 1");
+              client.println("    }, 60000);");
+              client.println("        document.querySelector('.have_flame').style.background = 'red'");
+              client.println("    }} else {");
+              client.println("        document.querySelector('.have_flame').style.background = '#008000'");
+              client.println("    }");
+              client.println("    if (document.querySelector('#switch_MQ2_2').innerText == 'повышенный') {");
+              client.println("        if(flagTrevoga == 1){alert('тревога: повышенная дозировка вредных газов!');");
+              client.println("        document.querySelector('.have_gass').style.background = 'red'");
+              client.println("        flagTrevoga = 0");
+              client.println("    setTimeout(() => {");
+              client.println("        flagTrevoga = 1");
+              client.println("    }, 60000);");
+              client.println("    }} else {");
+              client.println("        document.querySelector('.have_gass').style.background = '#008000'");
+              client.println("    }");
+              client.println("}");
               client.println("setInterval(() => {");
               client.println("readSensorLight()");
               client.println("readSensorFlame()");
               client.println("readSensorMQ2()");
               client.println("readSensorVibr()");
-              client.println("},100)");
+              client.println("},1000)");
               client.println("setInterval(() => {");
               client.println("readSensorWater()");
-              client.println("},500)");
+              client.println("},1500)");
               client.println("setInterval(() => {");
               client.println("readSensorDHTtem()");
               client.println("readSensorDHThum()");
-              client.println("},1000)");
+              client.println("},2500)");
               client.println("setInterval(() => {");
               client.println("readSensorPrs()");
+              client.println("checkValue()");
               client.println("},5000)");
               client.println("setInterval(() => {");
               client.println("if (document.querySelector('.firstt').innerHTML == 'Выкл') {firstv.style.display = 'none'; firstv.parentNode.querySelector('.tittle').style.textDecoration = 'line-through';have_rain.style.display = 'none';value_rain.style.display = 'none'}");
